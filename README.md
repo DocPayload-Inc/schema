@@ -2,7 +2,7 @@
 
 **Plain JSON. Every document.**
 
-DocPayload is a declarative, JSON-based document definition format. Describe your document once — layout, styling, content, security — and DocPayload renders it to **PDF, DOCX, or SVG**, pixel-perfect and production-ready.
+DocPayload is a declarative, JSON-based document definition format. Describe your document once — layout, styling, content, security — and DocPayload renders it to **PDF** (page-exact and print-ready), **DOCX** (fully editable in Word), or **SVG** (scalable and embeddable). One JSON in, the right format out.
 
 ---
 
@@ -42,9 +42,29 @@ Reference the official schema in your JSON for instant IDE validation:
 }
 ```
 
-That's a valid DocPayload document. Send it to the DocPayload API and you get a PDF back.
+That's a valid DocPayload document. Send it to the DocPayload API and get back a **PDF**, **DOCX**, or **SVG** — same input, your choice of output.
+
+**[Try in Playground →](https://docpayload.com/dashboard/playground)** — paste any DocPayload JSON, hit render, and see the output instantly. No setup, no API keys.
+
+### How it works
+
+No SDK required — **the schema is the contract**. POST your JSON to the DocPayload API and get the rendered document back via the delivery mode that fits your flow:
+
+- **HTTP response** — synchronous, ideal for low-latency interactive use.
+- **Email** — deliver the rendered document straight to a recipient inbox.
+- **Webhook** — push the result to your own endpoint for asynchronous, batch, or long-running workflows.
+
+Any language that speaks HTTP and JSON can talk to DocPayload — Python, Node, .NET, Go, Java, Rust, curl, Postman, your spreadsheet macro. If it can POST, it can render documents.
 
 ### Try a real document
+
+<p align="center">
+  <a href="https://docpayload.com/docs/tutorials/void-check"><img src="https://docpayload.com/thumbnails/void-check-step-6.svg" alt="Void cheque sample" width="220"></a>
+  &nbsp;
+  <a href="https://docpayload.com/docs/tutorials/certificate-suite"><img src="https://docpayload.com/thumbnails/certificate-suite.svg" alt="Certificate suite sample" width="220"></a>
+  &nbsp;
+  <a href="https://docpayload.com/docs/tutorials/lab-result-report"><img src="https://docpayload.com/thumbnails/lab-result-report.svg" alt="Lab result report sample" width="220"></a>
+</p>
 
 Walk through one of these end-to-end tutorials to see DocPayload applied to a real-world document:
 
@@ -55,6 +75,8 @@ Walk through one of these end-to-end tutorials to see DocPayload applied to a re
 - [Lab result report](https://docpayload.com/docs/tutorials/lab-result-report) — tabular clinical data with headers, footers, and metadata
 - [Lease agreement](https://docpayload.com/docs/tutorials/lease-agreement) — long-form contract with sections, signatures, and bookmarks
 - [Multilingual device guide](https://docpayload.com/docs/tutorials/multilingual-device-guide) — multi-script content (CJK, Devanagari, Thai, Latin) with custom fonts
+- [Research consent form](https://docpayload.com/docs/tutorials/research-consent-form) — fillable form exported as both PDF and DOCX from the same JSON
+- [Product lookbook](https://docpayload.com/docs/tutorials/product-lookbook) — composition in action: reusable components, per-section frames, image-led marketing layout
 
 ---
 
@@ -75,7 +97,8 @@ DocPayload is designed to cover the full range of business and consumer document
 | **Components**         | Define once, reuse across documents via `use` references                    |
 | **Bookmarks & TOC**    | Auto-generated outlines with configurable tab leaders                       |
 | **Shortcodes**         | Inline `[bracket]` tags for formatting, links, form fields, media, barcodes |
-| **Internationalization** | 25+ languages, CJK / Indic / Arabic scripts, mixed LTR + RTL in one doc   |
+| **Fillable forms**     | Text, checkbox, radio, dropdown, list box, and signature fields — AcroForm  |
+| **Internationalization** | Any language — bring your own fonts. CJK, Indic, Arabic, mixed LTR + RTL  |
 | **Diagnostics**        | Inline or appendix-style validation reports (info / warning / error levels) |
 
 ---
@@ -107,6 +130,52 @@ Shortcodes are inline `[bracket]` tags you drop into any text element — paragr
 Shortcodes are inline-only and combine naturally with the `style` system, so you get the best of both worlds: structured styling for blocks, lightweight inline tagging for the words inside them.
 
 **More:** [Shortcodes overview](https://docpayload.com/docs/shortcodes/overview)
+
+---
+
+## Composition
+
+Build documents the way you build software — define the pieces once, reuse them everywhere. DocPayload's composition model is built around three primitives:
+
+- **Components** — define a reusable building block (a product card, a signature block, a header bar, a watermark) as a standalone JSON definition.
+- **`use` references** — pull components into any document, optionally passing per-instance data.
+- **Sections and frames** — switch page setup, headers, and footers between parts of the same document, without splitting it into multiple files.
+
+### Components
+
+Define a component the same way you define a document, but with `component` as the root key:
+
+```json
+{
+  "component": {
+    "content": [
+      { "p": "[b]$data.name[/b] — $data.price" }
+    ]
+  }
+}
+```
+
+Drop it into a document by reference, with data per instance:
+
+```json
+{ "use": "product-card", "data": { "name": "Atlas Lamp", "price": "$120" } }
+```
+
+Stamp the same card six times across a catalog — each with its own data and image — without copying a single line of layout.
+
+### Sections and frames
+
+A single document can switch between layout frames (e.g. cover page → product spread → call-to-action) and the headers, footers, and page setup swap accordingly. Define the frames once, and per-section configuration picks which one applies.
+
+This is what makes long-form, multi-style documents tractable: a 40-page report with a cover, a landscape data section, and a portrait appendix is **one JSON file, one render call** — not three documents stitched together.
+
+### Worked example
+
+<p align="center">
+  <a href="https://docpayload.com/docs/tutorials/product-lookbook"><img src="https://docpayload.com/thumbnails/product-lookbook.svg" alt="Product lookbook sample — composition with reusable components and per-section frames" width="600"></a>
+</p>
+
+See the [product lookbook tutorial](https://docpayload.com/docs/tutorials/product-lookbook) for composition in full: one product-card component reused six times, four sections managed through a single frame definition, running headers that change per section, and a shared footer across the whole catalog.
 
 ---
 
@@ -167,11 +236,77 @@ Built-in `$global.*` tokens are also available for things like the current date,
 
 ---
 
+## Fillable Forms
+
+DocPayload produces real, interactive forms — AcroForm fields in PDF, native form controls in DOCX — not flattened images. **The same JSON renders fillable fields to both formats**, so recipients can complete the form in any standard PDF viewer or in Microsoft Word.
+
+### Field types
+
+| Field          | Shortcode                                                 | Use for                                          |
+| -------------- | --------------------------------------------------------- | ------------------------------------------------ |
+| Text input     | `[textfield, name, 'value', W\|H]`                        | Single-line entries (name, ID, amount)           |
+| Text area      | `[textarea, name, 'value', W\|H]`                         | Multi-line entries (comments, descriptions)      |
+| Checkbox       | `[checkbox, name, checked, W\|H]`                         | Boolean toggles, multi-select options            |
+| Radio button   | `[radio, name, group, selected, W\|H]`                    | Mutually exclusive choices                       |
+| Dropdown       | `[choicefield, name, opt1\|opt2\|opt3, index, W\|H]`      | Single-pick from a defined list                  |
+| List box       | `[listbox, name, opt1\|opt2, 'value', multi, W\|H]`       | Single or multi-select from a list               |
+| Signature      | Signature field via the `signature` block                 | Capture digital signatures (PAdES or Detached)   |
+
+Fields drop directly into running text, table cells, headers, or footers — no separate form layer to wrestle with.
+
+### Inline placement example
+
+```json
+{
+  "p": "Full name: [textfield, fullName, '', 200|18]    I agree to the terms: [checkbox, agreeTerms, false, 14|14]"
+}
+```
+
+### Pre-filling from data
+
+Combine fillable fields with [data binding](#data-binding) to pre-populate values from your payload:
+
+```json
+{
+  "p": "Email: [textfield, email, '$data.user.email', 220|18]"
+}
+```
+
+Recipients see their information already populated — they just review, adjust, and sign.
+
+### Field-level locking
+
+Signature fields can lock the rest of the form once signed, with fine-grained control over what's still editable:
+
+- **`lockPermissions`** — `NO_CHANGES_ALLOWED` | `FORM_FILLING` | `FORM_FILLING_AND_ANNOTATION`
+- **`fieldLockAction`** — `ALL` (lock everything), `INCLUDE` (lock listed fields), `EXCLUDE` (lock everything except listed fields)
+
+### Document-level certification
+
+Set the document's `certificationLevel` to control what downstream users can do:
+
+- `UNSPECIFIED` — open form, no certification
+- `NO_CHANGES_PERMITTED` — read-only after first signature
+- `FORM_FIELDS_MODIFICATION` — form filling allowed, structure locked
+- `ANNOTATION_MODIFICATION` — form filling and annotations allowed
+
+This makes DocPayload a fit for everything from a quick intake form to a multi-signer contract with progressive lock-down at each signature step.
+
+### Worked example
+
+<p align="center">
+  <a href="https://docpayload.com/docs/tutorials/research-consent-form"><img src="https://docpayload.com/thumbnails/research-consent-form.svg" alt="Research consent form sample — fillable PDF and DOCX from the same JSON" width="600"></a>
+</p>
+
+See the [research consent form tutorial](https://docpayload.com/docs/tutorials/research-consent-form) for a full walkthrough: an IRB-compliant multi-section consent form with dual signature blocks (participant and investigator), exported as a **fillable PDF and fillable DOCX from the same JSON**.
+
+---
+
 ## Internationalization
 
 DocPayload is built for documents that cross borders and scripts:
 
-- **25+ languages** out of the box — Latin, CJK (Chinese, Japanese, Korean), Indic (Devanagari), Thai, Arabic, Hebrew, and more.
+- **Any language, any script** — bring your own fonts and DocPayload renders them. Latin, CJK (Chinese, Japanese, Korean), Indic (Devanagari), Thai, Arabic, Hebrew, Cyrillic, Greek, and beyond — there's no fixed language list.
 - **Complex script shaping** — Devanagari conjuncts, Thai stacked vowels and tone marks, and paragraph-length CJK all render correctly.
 - **RTL support** — set `baseDirection: "rtl"` at the paragraph level. Mix LTR and RTL blocks in the same document without redesigning your layout.
 - **Bilingual layouts** — side-by-side parallel columns (e.g. English + Arabic), with each block reading in its native direction.
@@ -181,8 +316,8 @@ DocPayload is built for documents that cross borders and scripts:
 - **Multi-script composition** — combine scripts in a single element (e.g. a canvas seal with concentric `textPath` rings carrying Latin + CJK outer and Devanagari + Thai inner).
 
 **Tutorials:**
-- [Multilingual device guide](https://docpayload.com/docs/tutorials/multilingual-device-guide)
-- [Bilingual invoice](https://docpayload.com/docs/tutorials/bilingual-invoice)
+- [World languages proclamation](https://docpayload.com/docs/tutorials/world-languages-proclamation) — eight writing systems (Latin, Cyrillic, Greek, Arabic, Hebrew, Devanagari, Thai, CJK), multi-script canvas seals, and HarfBuzz contextual shaping in a single document
+- [Bilingual invoice](https://docpayload.com/docs/tutorials/bilingual-invoice) — side-by-side English + Arabic with parallel column layout and mixed LTR/RTL totals
 
 ---
 
@@ -283,7 +418,7 @@ Add the `$schema` field at the top of any DocPayload JSON file and your editor (
 
 ## Versioning
 
-This README documents the **v1** schema. The schema follows JSON Schema Draft-07. Breaking changes will be published under a new version path (`/v2/`, `/v3/`, …) — v1 will remain stable and available.
+This README documents the **v1** schema, which follows JSON Schema Draft-07. The schema is versioned at the URL path level so existing integrations keep rendering against the version they were authored for.
 
 ---
 
