@@ -54,6 +54,7 @@ Walk through one of these end-to-end tutorials to see DocPayload applied to a re
 - [Refund workflow](https://docpayload.com/docs/tutorials/refund-workflow) — multi-step business document with data binding
 - [Lab result report](https://docpayload.com/docs/tutorials/lab-result-report) — tabular clinical data with headers, footers, and metadata
 - [Lease agreement](https://docpayload.com/docs/tutorials/lease-agreement) — long-form contract with sections, signatures, and bookmarks
+- [Multilingual device guide](https://docpayload.com/docs/tutorials/multilingual-device-guide) — multi-script content (CJK, Devanagari, Thai, Latin) with custom fonts
 
 ---
 
